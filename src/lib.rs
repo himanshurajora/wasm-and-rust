@@ -1,6 +1,9 @@
 #[allow(dead_code)]
 mod dom1;
 use crate::dom1::register_button_click;
+mod dom2;
+
+use crate::dom2::canvas_1;
 
 mod utils;
 use wasm_bindgen::prelude::*;
@@ -26,4 +29,9 @@ pub fn greet() {
 
     // add_dom_elements_1()
     register_button_click();
+}
+
+#[wasm_bindgen]
+pub fn render() {
+    canvas_1();
 }
