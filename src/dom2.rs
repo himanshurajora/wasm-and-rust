@@ -1,7 +1,27 @@
-use crate::alert;
 use std::f64;
 use std::rc::Rc;
 use wasm_bindgen::{prelude::*, JsCast};
+use web_sys::{CanvasRenderingContext2d, KeyboardEvent, MouseEvent};
+#[derive(Clone, Copy)]
+struct Point {
+    x: f64,
+    y: f64,
+}
+
+impl Point {
+    pub fn new(x: f64, y: f64) -> Point {
+        Point { x, y }
+    }
+
+    pub fn draw(&self, context: &CanvasRenderingContext2d) {
+        context.fill_rect(self.x, self.y, 5.0, 5.0);
+    }
+
+    pub fn set(&mut self, x: f64, y: f64) {
+        self.x = x;
+        self.y = y;
+    }
+}
 
 #[wasm_bindgen]
 pub fn canvas_1() {
@@ -48,25 +68,38 @@ pub fn canvas_1() {
     context.stroke();
 
     context.set_fill_style(&"red".into());
-    let mut x = 0.0;
-    let mut y = 0.0;
     use web_sys::console;
 
+    let mut p = Point::new(400.0, 400.0);
+
+    let keydown_closure = Closure::wrap(Box::new(move |ev: KeyboardEvent| {
+        let key = ev.key();
+        console::log_1(&JsValue::from(&key));
+        if key == "w" {
+            console::log_1(&"clicked".into());
+            p.set(p.x, p.y - 1.0);
+            console::log_3(&"key".into(), &JsValue::from(p.x), &p.y.into())
+        }
+    }) as Box<dyn FnMut(_)>);
+
     let closure = Closure::wrap(Box::new(move || {
-        console::log_2(&JsValue::from(x), &JsValue::from(y));
-        x += 1.0;
-        y += 1.0;
-        // let radom_x = context.fill_rect(x, y, w, h);
-        context.fill_rect(x, y, 2.2, 2.2);
+        // x += 1.0;
+        // y += 1.0;
+        context.clear_rect(0.0, 0.0, 500.0, 500.0);
+        console::log_3(&"closure key".into(), &JsValue::from(p.x), &p.y.into());
+        p.draw(&context);
     }) as Box<dyn FnMut()>);
+
     window
         .set_interval_with_callback_and_timeout_and_arguments_0(
             closure.as_ref().unchecked_ref(),
-            100,
+            1000 / 60,
         )
         .expect("Should set interval");
 
+    window
+        .add_event_listener_with_callback("keydown", keydown_closure.as_ref().unchecked_ref())
+        .expect("Should attach the event");
     closure.forget();
-    drop(x);
-    drop(y);
+    keydown_closure.forget();
 }
