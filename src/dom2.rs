@@ -1,7 +1,7 @@
-use std::f64;
-use wasm_bindgen::{prelude::*, JsCast};
-
 use crate::alert;
+use std::f64;
+use std::rc::Rc;
+use wasm_bindgen::{prelude::*, JsCast};
 
 #[wasm_bindgen]
 pub fn canvas_1() {
@@ -51,20 +51,18 @@ pub fn canvas_1() {
     let mut x = 0.0;
     let mut y = 0.0;
     use web_sys::console;
-    let closure = Closure::<dyn FnMut(_, _)>::new(move |mut a: f64, mut b: f64| {
-        console::log_1(&"Hello from closure".into());
-        a += 1.0;
-        b += 1.0;
 
-        console::log_2(&JsValue::from(a), &JsValue::from(b));
-        context.fill_rect(a, b, 2.2, 2.2);
-    });
+    let closure = Closure::wrap(Box::new(move || {
+        console::log_2(&JsValue::from(x), &JsValue::from(y));
+        x += 1.0;
+        y += 1.0;
+        // let radom_x = context.fill_rect(x, y, w, h);
+        context.fill_rect(x, y, 2.2, 2.2);
+    }) as Box<dyn FnMut()>);
     window
-        .set_interval_with_callback_and_timeout_and_arguments_2(
+        .set_interval_with_callback_and_timeout_and_arguments_0(
             closure.as_ref().unchecked_ref(),
             100,
-            &JsValue::from(x),
-            &JsValue::from(y),
         )
         .expect("Should set interval");
 
